@@ -1,5 +1,6 @@
 import { conversationModel } from "#src/models/conversationModel.js";
 
+// Logic tạo chat đôi (Giữ nguyên)
 const createConversation = async (senderId, receiverId) => {
   const conversation = await conversationModel.Conversation.findOne({
     type: "direct",
@@ -16,6 +17,18 @@ const createConversation = async (senderId, receiverId) => {
   return newConversation;
 };
 
+// 👉 Logic tạo Group (THÊM MỚI HÀM NÀY)
+const createGroupConversation = async (data) => {
+  const newGroup = await conversationModel.Conversation.create({
+    type: "group",
+    name: data.name,
+    participants: data.participants,
+    avatar: data.avatar || "",
+    createdBy: data.createdBy,
+  });
+  return newGroup;
+};
+
 const getConversationsByUserId = async (userId) => {
   const conversations = await conversationModel.Conversation.find({
     participants: { $in: [userId] },
@@ -26,7 +39,9 @@ const getConversationsByUserId = async (userId) => {
 
   return conversations;
 };
+
 export const conversationService = {
   createConversation,
+  createGroupConversation, // Nhớ export hàm mới ra
   getConversationsByUserId,
 };
