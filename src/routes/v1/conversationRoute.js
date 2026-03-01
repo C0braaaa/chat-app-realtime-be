@@ -6,5 +6,6 @@ const Router = express.Router();
 Router.post("/conversation", conversationController.createConversation);
 Router.get("/conversation", conversationController.getConversations);
 Router.delete("/:conversationId", conversationController.deleteConversation);
+Router.delete("/group/:conversationId", conversationController.deleteGroup);
 
 export const conversationRoute = Router;

@@ -105,8 +105,26 @@ const deleteConversation = async (req, res) => {
   }
 };
 
+const deleteGroup = async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    const { userId } = req.body;
+
+    await conversationService.deleteGroupByOwner(conversationId, userId);
+
+    res.status(200).json({
+      success: true,
+      message: "Group and all related data have been permanently deleted.",
+    });
+  } catch (error) {
+    const status = error.message.includes("permission") ? 403 : 500;
+    res.status(status).json({ success: false, message: error.message });
+  }
+};
+
 export const conversationController = {
   createConversation,
   getConversations,
   deleteConversation,
+  deleteGroup,
 };

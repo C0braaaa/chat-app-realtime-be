@@ -1,4 +1,5 @@
 import { conversationModel } from "#src/models/conversationModel.js";
+import { messageModel } from "#src/models/messageModel.js";
 import mongoose from "mongoose";
 
 const createConversation = async (senderId, receiverId) => {
@@ -81,9 +82,33 @@ const deleteConversationForUser = async (conversationId, userId) => {
   await conversation.save();
   return conversation;
 };
+
+const deleteGroupByOwner = async (conversationId, userId) => {
+  const conversation =
+    await conversationModel.Conversation.findById(conversationId);
+
+  if (!conversation) throw new Error("Conversation not found");
+
+  if (conversation.type !== "group") {
+    throw new Error("This action is only for group conversations");
+  }
+
+  if (conversation.createdBy.toString() !== userId.toString()) {
+    throw new Error(
+      "You do not have permission to delete this group. Only the owner can do this.",
+    );
+  }
+
+  await messageModel.Message.deleteMany({ conversationId });
+
+  await conversationModel.Conversation.findByIdAndDelete(conversationId);
+
+  return { success: true };
+};
 export const conversationService = {
   createConversation,
   createGroupConversation,
   getConversationsByUserId,
   deleteConversationForUser,
+  deleteGroupByOwner,
 };
