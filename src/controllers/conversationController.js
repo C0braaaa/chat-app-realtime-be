@@ -92,7 +92,21 @@ const getConversations = async (req, res) => {
   }
 };
 
+const deleteConversation = async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    const { userId } = req.body;
+
+    await conversationService.deleteConversationForUser(conversationId, userId);
+
+    res.status(200).json({ success: true, message: "Conversation deleted" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export const conversationController = {
   createConversation,
   getConversations,
+  deleteConversation,
 };

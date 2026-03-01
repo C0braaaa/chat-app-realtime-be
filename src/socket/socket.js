@@ -13,21 +13,29 @@ export function initializeSocketServer(server) {
     if (!token) return next(new Error("Authentication error"));
 
     jwt.verify(token, env.JWT_SECRET, (err, decoded) => {
-      if (err) return next(new Error("Invalid token"));
-      socket.user = decoded; // Lưu info user vào socket
+      if (err) {
+        return next(new Error("Invalid token"));
+      }
+      socket.user = decoded;
       next();
     });
   });
 
   // Xử lý kết nối
   io.on("connection", (socket) => {
-    console.log("User connected:", socket.user?.userId);
-
     // Join user vào phòng theo ID của họ (để chat riêng sau này)
     if (socket.user?.userId) {
       socket.join(socket.user.userId);
     }
+
+    socket.on("join_conversation", (conversationId) => {
+      socket.join(conversationId);
+    });
+
+    socket.on("leave_conversation", (conversationId) => {
+      socket.leave(conversationId);
+    });
   });
 
-  return io; // 👈 QUAN TRỌNG: Phải return để server.js dùng
+  return io;
 }

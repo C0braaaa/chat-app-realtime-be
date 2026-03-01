@@ -44,7 +44,41 @@ const login = async (req, res) => {
   }
 };
 
+const forgotPassword = async (req, res) => {
+  try {
+    await authService.forgotPassword(req.body.email);
+    res.status(200).json({ success: true, message: "OTP sent to email!" });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+const verifyOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    await authService.verifyOtp(email, otp);
+    res.status(200).json({ success: true, message: "OTP verified!" });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+const resetPassword = async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    await authService.resetPassword(email, otp, newPassword);
+    res
+      .status(200)
+      .json({ success: true, message: "Password reset successful!" });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
 export const authController = {
   register,
   login,
+  forgotPassword,
+  verifyOtp,
+  resetPassword,
 };

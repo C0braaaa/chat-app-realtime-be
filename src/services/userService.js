@@ -18,7 +18,11 @@ const updateProfile = async (userId, { name, avatar }) => {
 };
 
 // get all users
-const getAllUsers = async (currentUserId, filterDirect = false) => {
+const getAllUsers = async (
+  currentUserId,
+  filterDirect = false,
+  search = "",
+) => {
   let excludedIds = [currentUserId]; // Mặc định loại bỏ chính mình
 
   // Nếu cờ filterDirect = true (tức là đang ở chế độ tạo Direct Chat)
@@ -39,10 +43,21 @@ const getAllUsers = async (currentUserId, filterDirect = false) => {
     });
   }
 
+  let query = { _id: { $nin: excludedIds } };
+
   // 3. Query User và loại bỏ danh sách excludedIds
-  const users = await userModel.User.find({
-    _id: { $nin: excludedIds }, // $nin: Không nằm trong danh sách này
-  }).select("-password");
+  const usersRaw = await userModel.User.find(query).select("-password");
+
+  if (!search) return usersRaw;
+
+  // normalize function: remove diacritics and lowercase
+  const normalize = (str) =>
+    (str || "").normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+
+  const normSearch = normalize(search);
+
+  // filter in-memory to support diacritic-insensitive matching
+  const users = usersRaw.filter((u) => normalize(u.name).includes(normSearch));
 
   return users;
 };

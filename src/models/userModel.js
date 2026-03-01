@@ -6,19 +6,19 @@ const userSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, "Vui lòng nhập tên!"],
+      required: [true, "Please enter your name!"],
     },
     email: {
       type: String,
-      required: [true, "Vui lòng nhập email!"],
+      required: [true, "Please enter your email!"],
       unique: true,
       lowercase: true,
-      validate: [validator.isEmail, "Email không hợp lệ!"],
+      validate: [validator.isEmail, "Invalid email!"],
     },
     password: {
       type: String,
-      required: [true, "Vui lòng nhập mật khẩu!"],
-      minlength: [6, "Mật khẩu phải có ít nhất 6 ký tự"],
+      required: [true, "Please enter your password!"],
+      minlength: [6, "Password must be at least 6 characters!"],
       select: false, // Ẩn mật khẩu khi query để bảo mật
     },
     avatar: {
@@ -29,10 +29,13 @@ const userSchema = new mongoose.Schema(
         validator: (value) => {
           return !value || validator.isURL(value);
         },
-        message: "Link avatar không hợp lệ!",
+        message: "Invalid URL!",
       },
     },
+    resetPasswordOtp: String,
+    resetPasswordOtpExpires: Date,
   },
+
   {
     // Cấu hình timestamps để dùng tên trường theo ý bạn (snake_case)
     timestamps: {

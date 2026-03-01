@@ -29,16 +29,22 @@ const getAllUsers = async (req, res) => {
   try {
     const currentUserId = req.query.userId;
     const fetchType = req.query.fetchType;
+    const search = req.query.search;
 
     const filterDirect = fetchType === "direct";
 
-    const users = await userService.getAllUsers(currentUserId, filterDirect);
+    const users = await userService.getAllUsers(
+      currentUserId,
+      filterDirect,
+      search,
+    );
 
     res.status(200).json({ success: true, data: users });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 export const userController = {
   updateProfile,
   getAllUsers,
