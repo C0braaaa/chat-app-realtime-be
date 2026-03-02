@@ -1,9 +1,14 @@
 import { messageService } from "#src/services/messageService.js";
 import { conversationModel } from "#src/models/conversationModel.js";
+import { getBotResponse } from "#src/services/aiService.js";
+import { env } from "#src/config/environment.js";
+import { PushToken } from "#src/models/pushTokenModel.js";
+
 const sendMessage = async (req, res) => {
   try {
     const { conversationId, content, attachement, senderId } = req.body;
 
+    // 1. Lưu tin nhắn vào Database
     const message = await messageService.sendMessage({
       senderId,
       conversationId,
@@ -11,11 +16,12 @@ const sendMessage = async (req, res) => {
       attachement,
     });
 
+    // 2. Gửi Real-time qua Socket.io
     const io = req.app.get("socketio");
     io.to(conversationId.toString()).emit("new_message", message);
+
     const conversation =
       await conversationModel.Conversation.findById(conversationId);
-
     if (conversation) {
       conversation.participants.forEach((participantId) => {
         io.to(participantId.toString()).emit("update_last_message", {
@@ -24,10 +30,94 @@ const sendMessage = async (req, res) => {
         });
       });
     }
+
+    // 3. Trả về phản hồi cho Client ngay lập tức
     res.status(200).json({ success: true, data: message });
+
+    // 🚀 4. GỬI THÔNG BÁO ĐẨY (PUSH NOTIFICATION)
+    // Chỉ gửi nếu người gửi không phải là Bot
+    if (senderId !== env.BOT_USER_ID) {
+      try {
+        const receivers = conversation.participants.filter(
+          (p) => p.toString() !== senderId.toString(),
+        );
+
+        const userTokens = await PushToken.find({ userId: { $in: receivers } });
+
+        if (userTokens.length > 0) {
+          const expoTokens = userTokens.map((t) => t.token);
+
+          const pushPayload = {
+            to: expoTokens,
+            title:
+              conversation.type === "group"
+                ? conversation.name
+                : message.senderId.name || "Tin nhắn mới",
+            body: content || "Đã gửi một hình ảnh",
+            sound: "default",
+            priority: "high",
+            badge: 1,
+            // Data must be string key-value pairs for Expo
+            data: {
+              conversationId: conversationId.toString(),
+              senderName: message.senderId.name || "Someone",
+              messageId: message._id.toString(),
+            },
+            // Additional settings for better reliability
+            ttl: 86400, // 24 hours
+            channelId: "default",
+          };
+
+          const pushResponse = await fetch(
+            "https://exp.host/--/api/v2/push/send",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(pushPayload),
+            },
+          );
+
+          const pushResult = await pushResponse.json();
+
+          if (!pushResponse.ok) {
+            console.error("Expo push error:", pushResult);
+          }
+        } else {
+          // no tokens, nothing to send
+        }
+      } catch (pushError) {
+        console.error("Error sending notification:", pushError);
+      }
+    }
+
+    // 5. XỬ LÝ CHATBOT (@bot)
+    if (content && content.toLowerCase().includes("@bot")) {
+      const userPrompt = content.replace(/@bot/gi, "").trim();
+
+      const aiReply = await getBotResponse(userPrompt);
+
+      const botMessage = await messageService.sendMessage({
+        senderId: env.BOT_USER_ID,
+        conversationId: conversationId,
+        content: aiReply,
+        attachement: null,
+      });
+
+      io.to(conversationId.toString()).emit("new_message", botMessage);
+
+      if (conversation) {
+        conversation.participants.forEach((participantId) => {
+          io.to(participantId.toString()).emit("update_last_message", {
+            conversationId,
+            lastMessage: botMessage,
+          });
+        });
+      }
+    }
   } catch (error) {
-    console.log("Error: ", error);
-    res.status(500).json({ success: false, message: error.message });
+    if (!res.headersSent) {
+      res.status(500).json({ success: false, message: error.message });
+    }
   }
 };
 

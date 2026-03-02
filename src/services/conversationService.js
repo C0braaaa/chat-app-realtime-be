@@ -15,7 +15,7 @@ const createConversation = async (senderId, receiverId) => {
 
   const newConversation = await conversationModel.Conversation.create({
     type: "direct",
-    participants: [senderObjectId, receiverObjectId], // Lưu ObjectId chuẩn luôn
+    participants: [senderObjectId, receiverObjectId],
     createdBy: senderObjectId,
   });
   return newConversation;
@@ -64,18 +64,15 @@ const getConversationsByUserId = async (userId) => {
 const deleteConversationForUser = async (conversationId, userId) => {
   const conversation =
     await conversationModel.Conversation.findById(conversationId);
-  if (!conversation) throw new Error("Conversation not found");
+  if (!conversation) throw new Error("Không tìm thấy cuộc hội thoại");
 
-  // Kiểm tra xem user này đã từng xóa trước đó chưa
   const existingDeleteIndex = conversation.deletedBy.findIndex(
     (item) => item.userId.toString() === userId.toString(),
   );
 
   if (existingDeleteIndex !== -1) {
-    // Nếu đã từng xóa, cập nhật lại thời gian xóa mới nhất
     conversation.deletedBy[existingDeleteIndex].deletedAt = new Date();
   } else {
-    // Nếu chưa, thêm mới vào mảng
     conversation.deletedBy.push({ userId, deletedAt: new Date() });
   }
 
@@ -87,15 +84,15 @@ const deleteGroupByOwner = async (conversationId, userId) => {
   const conversation =
     await conversationModel.Conversation.findById(conversationId);
 
-  if (!conversation) throw new Error("Conversation not found");
+  if (!conversation) throw new Error("Không tìm thấy cuộc hội thoại");
 
   if (conversation.type !== "group") {
-    throw new Error("This action is only for group conversations");
+    throw new Error("Hành động này chỉ dành cho cuộc hội thoại nhóm");
   }
 
   if (conversation.createdBy.toString() !== userId.toString()) {
     throw new Error(
-      "You do not have permission to delete this group. Only the owner can do this.",
+      "Bạn không có quyền xóa nhóm này. Chỉ chủ nhóm mới có thể thực hiện.",
     );
   }
 
@@ -105,6 +102,7 @@ const deleteGroupByOwner = async (conversationId, userId) => {
 
   return { success: true };
 };
+
 export const conversationService = {
   createConversation,
   createGroupConversation,

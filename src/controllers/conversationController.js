@@ -2,7 +2,6 @@ import { conversationService } from "#src/services/conversationService.js";
 
 const createConversation = async (req, res) => {
   try {
-    // Lấy tất cả các trường có thể gửi lên
     const {
       senderId,
       receiverId,
@@ -13,23 +12,20 @@ const createConversation = async (req, res) => {
       createdBy,
     } = req.body;
 
-    // 👉 TRƯỜNG HỢP 1: TẠO GROUP
     if (type === "group") {
-      // Validate dữ liệu group
       if (!participants || participants.length < 2) {
         return res.status(400).json({
           success: false,
-          message: "Group must have at least 2 participants",
+          message: "Nhóm phải có ít nhất 2 thành viên",
         });
       }
       if (!name) {
         return res.status(400).json({
           success: false,
-          message: "Group name is required",
+          message: "Tên nhóm là bắt buộc",
         });
       }
 
-      // Gọi service tạo group
       const conversation = await conversationService.createGroupConversation({
         name,
         participants,
@@ -39,23 +35,22 @@ const createConversation = async (req, res) => {
 
       return res.status(200).json({
         success: true,
-        message: "Create group successfully!",
+        message: "Tạo nhóm thành công!",
         data: conversation,
       });
     }
 
-    // 👉 TRƯỜNG HỢP 2: TẠO DIRECT CHAT (Logic cũ)
     if (!receiverId) {
       return res.status(400).json({
         success: false,
-        message: "Receiver id is required",
+        message: "ID người nhận là bắt buộc",
       });
     }
 
     if (!senderId) {
       return res.status(400).json({
         success: false,
-        message: "Sender id is required",
+        message: "ID người gửi là bắt buộc",
       });
     }
 
@@ -66,14 +61,14 @@ const createConversation = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Create conversation successfully!",
+      message: "Tạo cuộc hội thoại thành công!",
       data: conversation,
     });
   } catch (error) {
-    console.error("Create conversation error:", error);
+    console.error("Lỗi tạo cuộc hội thoại:", error);
     res.status(500).json({
       success: false,
-      message: error.message || "Failed to create conversation",
+      message: error.message || "Không thể tạo cuộc hội thoại",
     });
   }
 };
@@ -99,7 +94,7 @@ const deleteConversation = async (req, res) => {
 
     await conversationService.deleteConversationForUser(conversationId, userId);
 
-    res.status(200).json({ success: true, message: "Conversation deleted" });
+    res.status(200).json({ success: true, message: "Đã xóa cuộc hội thoại" });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -114,10 +109,10 @@ const deleteGroup = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Group and all related data have been permanently deleted.",
+      message: "Nhóm và tất cả dữ liệu liên quan đã bị xóa vĩnh viễn.",
     });
   } catch (error) {
-    const status = error.message.includes("permission") ? 403 : 500;
+    const status = error.message.includes("quyền") ? 403 : 500;
     res.status(status).json({ success: false, message: error.message });
   }
 };

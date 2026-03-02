@@ -23,9 +23,9 @@ const sendMessage = async ({
 
 const deleteMessage = async (messageId, userId) => {
   const message = await messageModel.Message.findById(messageId);
-  if (!message) throw new Error("Message not found");
+  if (!message) throw new Error("Không tìm thấy tin nhắn");
   if (message.senderId.toString() !== userId)
-    throw new Error("You not unauthorized to delete this message");
+    throw new Error("Bạn không có quyền xóa tin nhắn này");
   await messageModel.Message.findByIdAndDelete(messageId);
 
   const newLastMessage = await messageModel.Message.findOne({
@@ -63,12 +63,13 @@ const getMessages = async (conversationId, userId) => {
     .sort({ created_at: -1 });
   return messsages;
 };
+
 const editMessage = async (messageId, userId, newContent) => {
   const message = await messageModel.Message.findById(messageId);
-  if (!message) throw new Error("Message not found");
+  if (!message) throw new Error("Không tìm thấy tin nhắn");
 
   if (message.senderId.toString() !== userId)
-    throw new Error("You are not authorized to edit this message");
+    throw new Error("Bạn không có quyền chỉnh sửa tin nhắn này");
 
   message.content = newContent;
   await message.save();

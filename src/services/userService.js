@@ -11,7 +11,7 @@ const updateProfile = async (userId, { name, avatar }) => {
     { new: true },
   );
   if (!updatedUser) {
-    throw new Error("User not found");
+    throw new Error("Không tìm thấy người dùng!");
   }
 
   return updatedUser;
