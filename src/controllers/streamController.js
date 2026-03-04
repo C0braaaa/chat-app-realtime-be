@@ -1,5 +1,5 @@
 import { StreamVideoClient } from '@stream-io/node-sdk';
-import { env } from '#src/config/environment';
+import { env } from '#src/config/environment.js';
 
 const apiKey = env.STREAM_API_KEY;
 const secret = env.STREAM_API_SECRET;
