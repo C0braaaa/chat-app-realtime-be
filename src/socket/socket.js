@@ -37,14 +37,18 @@ export function initializeSocketServer(server) {
 
     // ─── CALL SIGNALING ──────────────────────────────────────────────────────
     // Bước 1: Người gọi bấm "Gọi" → emit incoming_call cho người nhận
-    socket.on("call_user", ({ receiverId, callType, callerInfo, offer }) => {
-      io.to(receiverId).emit("incoming_call", {
-        callerId: socket.user.userId,
-        callerInfo, // { name, avatar } để hiển thị UI
-        callType, // "audio" | "video"
-        offer, // WebRTC SDP offer
-      });
-    });
+    socket.on(
+      "call_user",
+      ({ receiverId, callType, callerInfo, offer, conversationId }) => {
+        io.to(receiverId).emit("incoming_call", {
+          callerId: socket.user.userId,
+          callerInfo,
+          callType,
+          offer,
+          conversationId, // ← thêm dòng này
+        });
+      },
+    );
 
     // Bước 2a: Người nhận chấp nhận → trả answer về cho người gọi
     socket.on("call_accepted", ({ callerId, answer }) => {
