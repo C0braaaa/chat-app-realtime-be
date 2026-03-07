@@ -73,7 +73,7 @@ export function initializeSocketServer(server) {
       });
     });
 
-    // Bước 5 (optional): Người gọi không bắt máy → timeout
+    // Bước 5 (optional): Người gọi không bắt máy → timeout và báo missed call
     socket.on("call_missed", ({ receiverId }) => {
       io.to(receiverId).emit("call_missed", {
         callerId: socket.user.userId,
