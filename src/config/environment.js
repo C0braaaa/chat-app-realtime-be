@@ -12,8 +12,4 @@ export const env = {
   SMTP_PASS: process.env.SMTP_PASS,
   GROQ_API_KEY: process.env.GROQ_API_KEY,
   BOT_USER_ID: process.env.BOT_USER_ID,
-  APP_ID: process.env.APP_ID,
-  APP_SIGN: process.env.APP_SIGN,
-  STREAM_API_KEY: process.env.STREAM_API_KEY,
-  STREAM_API_SECRET: process.env.STREAM_API_SECRET,
 };

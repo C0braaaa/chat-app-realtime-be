@@ -19,69 +19,17 @@ export function initializeSocketServer(server) {
     });
   });
 
-  // Xử lý kết nối
   io.on("connection", (socket) => {
-    // Join user vào phòng theo userId (để nhận thông báo call)
     if (socket.user?.userId) {
       socket.join(socket.user.userId);
     }
 
-    // ─── CONVERSATION ───────────────────────────────────────────────────────
     socket.on("join_conversation", (conversationId) => {
       socket.join(conversationId);
     });
 
     socket.on("leave_conversation", (conversationId) => {
       socket.leave(conversationId);
-    });
-
-    // ─── CALL SIGNALING ──────────────────────────────────────────────────────
-    // Bước 1: Người gọi bấm "Gọi" → emit incoming_call cho người nhận
-    socket.on(
-      "call_user",
-      ({ receiverId, callType, callerInfo, offer, conversationId }) => {
-        io.to(receiverId).emit("incoming_call", {
-          callerId: socket.user.userId,
-          callerInfo,
-          callType,
-          offer,
-          conversationId, // ← thêm dòng này
-        });
-      },
-    );
-
-    // Bước 2a: Người nhận chấp nhận → trả answer về cho người gọi
-    socket.on("call_accepted", ({ callerId, answer }) => {
-      io.to(callerId).emit("call_accepted", { answer });
-    });
-
-    // Bước 2b: Người nhận từ chối → báo cho người gọi
-    socket.on("call_declined", ({ callerId }) => {
-      io.to(callerId).emit("call_declined", {
-        reason: "Người dùng từ chối cuộc gọi",
-      });
-    });
-
-    // Bước 3: Trao đổi ICE candidates (WebRTC handshake)
-    socket.on("ice_candidate", ({ targetId, candidate }) => {
-      io.to(targetId).emit("ice_candidate", {
-        candidate,
-        from: socket.user.userId,
-      });
-    });
-
-    // Bước 4: Một trong hai bên kết thúc cuộc gọi
-    socket.on("end_call", ({ targetId }) => {
-      io.to(targetId).emit("call_ended", {
-        from: socket.user.userId,
-      });
-    });
-
-    // Bước 5 (optional): Người gọi không bắt máy → timeout và báo missed call
-    socket.on("call_missed", ({ receiverId }) => {
-      io.to(receiverId).emit("call_missed", {
-        callerId: socket.user.userId,
-      });
     });
   });
 
