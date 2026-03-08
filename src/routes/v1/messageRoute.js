@@ -7,5 +7,6 @@ Router.post("/", messageController.sendMessage);
 Router.get("/:conversationId", messageController.getMessages);
 Router.delete("/:messageId", messageController.deleteMessage);
 Router.put("/:messageId", messageController.editMessage);
+Router.get("/search/:conversationId", messageController.searchMessages);
 
 export const messageRoute = Router;

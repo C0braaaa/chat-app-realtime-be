@@ -197,9 +197,31 @@ const getMessages = async (req, res) => {
   }
 };
 
+const searchMessages = async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    const { userId, keyword } = req.query;
+
+    if (!keyword) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Vui lòng nhập từ khóa" });
+    }
+
+    const messages = await messageService.searchMessages(
+      conversationId,
+      userId,
+      keyword,
+    );
+    res.status(200).json({ success: true, data: messages });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
 export const messageController = {
   sendMessage,
   getMessages,
   deleteMessage,
   editMessage,
+  searchMessages,
 };

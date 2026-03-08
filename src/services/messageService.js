@@ -84,9 +84,37 @@ const editMessage = async (messageId, userId, newContent) => {
   return { updatedMsg: populatedMessage, isLastMessage, conversation };
 };
 
+const searchMessages = async (conversationId, userId, keyword) => {
+  const conversation =
+    await conversationModel.Conversation.findById(conversationId);
+  let deleteTime = 0;
+
+  if (conversation) {
+    const deleteInfo = conversation.deletedBy.find(
+      (d) => d.userId.toString() === userId.toString(),
+    );
+    if (deleteInfo) deleteTime = new Date(deleteInfo.deletedAt).getTime();
+  }
+
+  let query = {
+    conversationId,
+    content: { $regex: keyword, $options: "i" },
+  };
+
+  if (deleteTime > 0) {
+    query.created_at = { $gt: new Date(deleteTime) };
+  }
+
+  const messages = await messageModel.Message.find(query)
+    .populate("senderId", "name avatar")
+    .sort({ created_at: -1 });
+
+  return messages;
+};
 export const messageService = {
   sendMessage,
   getMessages,
   deleteMessage,
   editMessage,
+  searchMessages,
 };
