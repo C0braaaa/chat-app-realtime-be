@@ -117,9 +117,43 @@ const deleteGroup = async (req, res) => {
   }
 };
 
+const updateTheme = async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    const { themeKey } = req.body;
+
+    if (!themeKey) {
+      return res
+        .status(400)
+        .json({ success: false, message: "themeKey là bắt buộc" });
+    }
+
+    const updatedConversation =
+      await conversationService.updateConversationTheme(
+        conversationId,
+        themeKey,
+      );
+
+    const io = req.app.get("socketio");
+    io.to(conversationId.toString()).emit("theme_updated", {
+      conversationId,
+      themeKey: updatedConversation.themeKey,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Cập nhật chủ đề thành công",
+      data: { themeKey: updatedConversation.themeKey },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export const conversationController = {
   createConversation,
   getConversations,
   deleteConversation,
   deleteGroup,
+  updateTheme,
 };

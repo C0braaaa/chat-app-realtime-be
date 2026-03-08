@@ -24,6 +24,7 @@ const ConversationSchema = new mongoose.Schema({
       deletedAt: { type: Date, default: Date.now },
     },
   ],
+  themeKey: { type: String, default: "default" },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",

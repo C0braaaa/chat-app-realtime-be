@@ -103,10 +103,24 @@ const deleteGroupByOwner = async (conversationId, userId) => {
   return { success: true };
 };
 
+const updateConversationTheme = async (conversationId, themeKey) => {
+  const conversation = await conversationModel.Conversation.findByIdAndUpdate(
+    conversationId,
+    { themeKey: themeKey },
+    { new: true },
+  );
+
+  if (!conversation)
+    throw new Error("Không tìm thấy cuộc hội thoại để cập nhật chủ đề");
+
+  return conversation;
+};
+
 export const conversationService = {
   createConversation,
   createGroupConversation,
   getConversationsByUserId,
   deleteConversationForUser,
   deleteGroupByOwner,
+  updateConversationTheme,
 };
