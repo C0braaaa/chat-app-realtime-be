@@ -61,6 +61,14 @@ const getConversationsByUserId = async (userId) => {
   return filteredConversations;
 };
 
+const getConversationById = async (conversationId) => {
+  const conversation = await conversationModel.Conversation.findById(
+    conversationId,
+  ).populate("participants", "name avatar");
+  if (!conversation) throw new Error("Không tìm thấy cuộc hội thoại");
+  return conversation;
+};
+
 const deleteConversationForUser = async (conversationId, userId) => {
   const conversation =
     await conversationModel.Conversation.findById(conversationId);
@@ -120,6 +128,7 @@ export const conversationService = {
   createConversation,
   createGroupConversation,
   getConversationsByUserId,
+  getConversationById,
   deleteConversationForUser,
   deleteGroupByOwner,
   updateConversationTheme,

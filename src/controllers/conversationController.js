@@ -87,6 +87,17 @@ const getConversations = async (req, res) => {
   }
 };
 
+const getConversationDetail = async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    const conversation =
+      await conversationService.getConversationById(conversationId);
+    res.status(200).json({ success: true, data: conversation });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 const deleteConversation = async (req, res) => {
   try {
     const { conversationId } = req.params;
@@ -156,4 +167,5 @@ export const conversationController = {
   deleteConversation,
   deleteGroup,
   updateTheme,
+  getConversationDetail,
 };

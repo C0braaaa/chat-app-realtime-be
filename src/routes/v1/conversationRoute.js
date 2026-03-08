@@ -5,6 +5,10 @@ const Router = express.Router();
 
 Router.post("/conversation", conversationController.createConversation);
 Router.get("/conversation", conversationController.getConversations);
+Router.get(
+  "/detail/:conversationId",
+  conversationController.getConversationDetail,
+);
 Router.delete("/:conversationId", conversationController.deleteConversation);
 Router.delete("/group/:conversationId", conversationController.deleteGroup);
 Router.put("/theme/:conversationId", conversationController.updateTheme);
