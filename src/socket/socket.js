@@ -2,74 +2,7 @@ import { Server as SocketIOServer } from "socket.io";
 import { env } from "#src/config/environment.js";
 import { PushToken } from "#src/models/pushTokenModel.js";
 import { userModel } from "#src/models/userModel.js";
-import { messageModel } from "#src/models/messageModel.js";
-import { conversationModel } from "#src/models/conversationModel.js";
 import jwt from "jsonwebtoken";
-
-// ─── Helper: format giây → "X phút Y giây" ───────────────────────────────────
-function formatDuration(seconds) {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  if (m > 0) return `${m} phút${s > 0 ? " " + s + " giây" : ""}`;
-  return `${s} giây`;
-}
-
-// ─── Helper: lưu call message vào DB và emit real-time ───────────────────────
-async function saveCallMessage(
-  io,
-  { callerId, receiverId, conversationId, callType, status, duration },
-) {
-  try {
-    let convId = conversationId;
-    if (!convId) {
-      const conv = await conversationModel.Conversation.findOne({
-        type: "direct",
-        participants: { $all: [callerId, receiverId] },
-      });
-      if (!conv) return;
-      convId = conv._id;
-    }
-
-    const durationText = duration > 0 ? formatDuration(duration) : "";
-    const statusText =
-      status === "missed"
-        ? "Đã bỏ lỡ cuộc gọi thoại"
-        : status === "rejected"
-          ? "Cuộc gọi bị từ chối"
-          : callType === "video"
-            ? `Cuộc gọi video${durationText ? " · " + durationText : ""}`
-            : `Cuộc gọi thoại${durationText ? " · " + durationText : ""}`;
-
-    const callMessage = await messageModel.Message.create({
-      conversationId: convId,
-      senderId: callerId,
-      content: statusText,
-      type: "call",
-      callInfo: { callType, status, duration },
-    });
-
-    await conversationModel.Conversation.findByIdAndUpdate(convId, {
-      lastMessage: callMessage._id,
-      updatedAt: new Date(),
-    });
-
-    const populated = await callMessage.populate("senderId", "name avatar");
-
-    io.to(convId.toString()).emit("new_message", populated);
-    io.to(callerId.toString()).emit("update_last_message", {
-      conversationId: convId,
-      lastMessage: populated,
-    });
-    io.to(receiverId.toString()).emit("update_last_message", {
-      conversationId: convId,
-      lastMessage: populated,
-    });
-
-    return populated;
-  } catch (err) {
-    console.error("saveCallMessage error:", err);
-  }
-}
 
 export function initializeSocketServer(server) {
   const io = new SocketIOServer(server, {
@@ -143,49 +76,17 @@ export function initializeSocketServer(server) {
       }
     });
 
-    // B chấp nhận → emit startTime cho A
     socket.on("accept_call", ({ to, answer }) => {
       io.to(to).emit("call_accepted", { answer });
-      const startTime = Date.now();
-      socket.callStartTime = startTime;
-      io.to(to).emit("call_start_time", { startTime });
     });
 
-    // A nhận startTime từ server
-    socket.on("store_start_time", ({ startTime }) => {
-      socket.callStartTime = startTime;
-    });
-
-    // B từ chối → lưu "Cuộc gọi nhỡ" (người gọi là A = to)
-    socket.on("reject_call", async ({ to, conversationId, callType }) => {
+    socket.on("reject_call", ({ to }) => {
       io.to(to).emit("call_rejected");
-      await saveCallMessage(io, {
-        callerId: to,
-        receiverId: socket.user.userId,
-        conversationId,
-        callType: callType || "audio",
-        status: "missed",
-        duration: 0,
-      });
     });
 
-    // Kết thúc cuộc gọi → tính duration, lưu tin nhắn
-    socket.on(
-      "end_call",
-      async ({ to, conversationId, callType, startTime }) => {
-        io.to(to).emit("call_ended");
-        const start = startTime || socket.callStartTime;
-        const duration = start ? Math.floor((Date.now() - start) / 1000) : 0;
-        await saveCallMessage(io, {
-          callerId: socket.user.userId,
-          receiverId: to,
-          conversationId,
-          callType: callType || "audio",
-          status: duration > 0 ? "ended" : "missed",
-          duration,
-        });
-      },
-    );
+    socket.on("end_call", ({ to }) => {
+      io.to(to).emit("call_ended");
+    });
 
     socket.on("ice_candidate", ({ to, candidate }) => {
       io.to(to).emit("ice_candidate", { candidate });

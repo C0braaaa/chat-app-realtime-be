@@ -14,17 +14,6 @@ const messageSchema = new mongoose.Schema(
     },
     content: String,
     attachement: String,
-    callInfo: {
-      type: {
-        type: String,
-        enum: ["audio", "video"],
-      },
-      status: {
-        type: String,
-        enum: ["ended", "missed"],
-      },
-      duration: Number,
-    },
   },
   {
     timestamps: {
