@@ -6,7 +6,7 @@ const sendEmail = async (options) => {
     sender: { name: "Cflix Support", email: env.SMTP_USER },
     to: [{ email: options.email }],
     subject: options.subject,
-    htmlContent: options.html,
+    htmlContent: options.htmlContent || options.html,
   };
 
   try {
