@@ -50,11 +50,11 @@ const forgotPassword = async (email) => {
   await user.save({ validateBeforeSave: false });
 
   try {
-    const message = `Mã OTP đặt lại mật khẩu của bạn là: ${otp}. Mã này có hiệu lực trong 5 phút.`;
+    const otpMessage = `<h3>Mã OTP đặt lại mật khẩu của bạn là: <b style="color: red;">${otp}</b></h3><p>Mã này có hiệu lực trong 5 phút.</p>`;
     await sendEmail({
       email: user.email,
       subject: "C Chat - Mã OTP đặt lại mật khẩu",
-      message,
+      htmlContent: otpMessage,
     });
   } catch (error) {
     user.resetPasswordOtp = undefined;

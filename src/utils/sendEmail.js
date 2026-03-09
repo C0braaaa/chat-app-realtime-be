@@ -6,7 +6,8 @@ const sendEmail = async (options) => {
     sender: { name: "Cflix Support", email: env.SMTP_USER },
     to: [{ email: options.email }],
     subject: options.subject,
-    htmlContent: options.htmlContent || options.html,
+    htmlContent: options.htmlContent || options.html || options.message,
+    textContent: options.message || "Mã xác thực từ C Chat",
   };
 
   try {
