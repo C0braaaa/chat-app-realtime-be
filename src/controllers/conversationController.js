@@ -26,6 +26,13 @@ const createConversation = async (req, res) => {
         });
       }
 
+      if (!avatar) {
+        return res.status(400).json({
+          success: false,
+          message: "Avatar là bắt buộc",
+        });
+      }
+
       const conversation = await conversationService.createGroupConversation({
         name,
         participants,
@@ -126,11 +133,18 @@ const deleteGroup = async (req, res) => {
     const { conversationId } = req.params;
     const { userId } = req.body;
 
+    const conversation =
+      await conversationService.getConversationById(conversationId);
+    if (!conversation) throw new Error("Không tìm thấy nhóm");
+
+    const participantIds = conversation.participants.map((p) =>
+      p._id.toString(),
+    );
     await conversationService.deleteGroupByOwner(conversationId, userId);
 
     const io = req.app.get("socketio");
     if (io) {
-      participants.forEach((memberId) => {
+      participantIds.forEach((memberId) => {
         io.to(memberId).emit("group_deleted", { conversationId });
       });
     }
@@ -140,6 +154,7 @@ const deleteGroup = async (req, res) => {
       message: "Nhóm và tất cả dữ liệu liên quan đã bị xóa vĩnh viễn.",
     });
   } catch (error) {
+    console.log("Lỗi xóa nhóm:", error.message);
     const status = error.message.includes("quyền") ? 403 : 500;
     res.status(status).json({ success: false, message: error.message });
   }
