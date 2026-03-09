@@ -1,6 +1,6 @@
 import { userModel } from "#src/models/userModel.js";
 import jwt from "jsonwebtoken";
-import { sendEmail } from "#src/utils/sendEmail.js";
+import sendEmail from "#src/utils/sendEmail.js";
 
 const register = async ({ name, email, password }) => {
   const isExistUser = await userModel.User.findOne({ email });
