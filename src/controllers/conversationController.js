@@ -128,6 +128,13 @@ const deleteGroup = async (req, res) => {
 
     await conversationService.deleteGroupByOwner(conversationId, userId);
 
+    const io = req.app.get("socketio");
+    if (io) {
+      participants.forEach((memberId) => {
+        io.to(memberId).emit("group_deleted", { conversationId });
+      });
+    }
+
     res.status(200).json({
       success: true,
       message: "Nhóm và tất cả dữ liệu liên quan đã bị xóa vĩnh viễn.",
