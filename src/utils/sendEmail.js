@@ -1,5 +1,5 @@
 import axios from "axios";
-import { env } from "~/config/environment";
+import { env } from "#src/config/environment.js";
 
 const sendEmail = async (options) => {
   const emailData = {
