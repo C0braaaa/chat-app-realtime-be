@@ -33,6 +33,16 @@ const createConversation = async (req, res) => {
         createdBy,
       });
 
+      const io = req.app.get("socketio");
+      if (io && participants && participants.length > 0) {
+        participants.forEach((memberId) => {
+          io.to(memberId.toString()).emit("new_group_created", {
+            success: true,
+            data: conversation,
+          });
+        });
+      }
+
       return res.status(200).json({
         success: true,
         message: "Tạo nhóm thành công!",
