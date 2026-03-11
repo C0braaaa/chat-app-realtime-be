@@ -2,6 +2,7 @@ import { Server as SocketIOServer } from "socket.io";
 import { env } from "#src/config/environment.js";
 import { PushToken } from "#src/models/pushTokenModel.js";
 import { userModel } from "#src/models/userModel.js";
+import { callHistoryService } from "#src/services/callHistory.js";
 import jwt from "jsonwebtoken";
 
 export function initializeSocketServer(server) {
@@ -39,6 +40,22 @@ export function initializeSocketServer(server) {
       const caller =
         await userModel.User.findById(callerId).select("name avatar");
 
+      // ✅ 1. Tạo call record — status mặc định "missed"
+      let callRecord = null;
+      try {
+        callRecord = await callHistoryService.createCallRecord({
+          conversationId,
+          callerId,
+          receiverId: to,
+          callType,
+        });
+      } catch (err) {
+        console.error("Lỗi tạo call record:", err);
+      }
+
+      const callId = callRecord?._id?.toString() || null;
+
+      // ✅ 2. Gửi incoming_call kèm callId để receiver dùng khi accept/reject
       io.to(to).emit("incoming_call", {
         from: callerId,
         callerName: caller?.name || "Ai đó",
@@ -46,8 +63,13 @@ export function initializeSocketServer(server) {
         offer,
         callType,
         conversationId,
+        callId, // 👈 receiver cần cái này
       });
 
+      // ✅ 3. Trả callId về cho chính caller để dùng khi end_call
+      socket.emit("call_initiated", { callId });
+
+      // Push notification cho receiver
       try {
         const tokenDoc = await PushToken.findOne({ userId: to });
         if (tokenDoc) {
@@ -76,16 +98,43 @@ export function initializeSocketServer(server) {
       }
     });
 
-    socket.on("accept_call", ({ to, answer }) => {
+    // ✅ Receiver chấp nhận → cập nhật startedAt
+    socket.on("accept_call", async ({ to, answer, callId }) => {
       io.to(to).emit("call_accepted", { answer });
+
+      if (callId) {
+        try {
+          await callHistoryService.markCallAccepted(callId);
+        } catch (err) {
+          console.error("Lỗi markCallAccepted:", err);
+        }
+      }
     });
 
-    socket.on("reject_call", ({ to }) => {
+    // ✅ Receiver từ chối → status = rejected
+    socket.on("reject_call", async ({ to, callId }) => {
       io.to(to).emit("call_rejected");
+
+      if (callId) {
+        try {
+          await callHistoryService.markCallRejected(callId);
+        } catch (err) {
+          console.error("Lỗi markCallRejected:", err);
+        }
+      }
     });
 
-    socket.on("end_call", ({ to }) => {
+    // ✅ Kết thúc cuộc gọi → status = completed + tính duration
+    socket.on("end_call", async ({ to, callId }) => {
       io.to(to).emit("call_ended");
+
+      if (callId) {
+        try {
+          await callHistoryService.markCallEnded(callId);
+        } catch (err) {
+          console.error("Lỗi markCallEnded:", err);
+        }
+      }
     });
 
     socket.on("ice_candidate", ({ to, candidate }) => {
