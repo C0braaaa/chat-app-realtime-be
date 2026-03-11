@@ -2,7 +2,7 @@ import { Server as SocketIOServer } from "socket.io";
 import { env } from "#src/config/environment.js";
 import { PushToken } from "#src/models/pushTokenModel.js";
 import { userModel } from "#src/models/userModel.js";
-import { callHistoryService } from "#src/services/callHistory.js";
+import { callHistoryService } from "#src/services/callHistoryService.js";
 import jwt from "jsonwebtoken";
 
 export function initializeSocketServer(server) {

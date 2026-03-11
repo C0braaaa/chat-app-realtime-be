@@ -1,5 +1,4 @@
 import { callHistoryModel } from "#src/models/callHistoryModel.js";
-
 const createCallRecord = async ({
   conversationId,
   callerId,
