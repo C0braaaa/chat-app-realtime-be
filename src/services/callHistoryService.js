@@ -27,11 +27,10 @@ const markCallAccepted = async (callId) => {
 const markCallEnded = async (callId) => {
   const record = await callHistoryModel.CallHistory.findById(callId);
   if (!record) return null;
+  if (!record.startedAt) return record;
 
   const endedAt = new Date();
-  const duration = record.startedAt
-    ? Math.floor((endedAt - new Date(record.startedAt)) / 1000)
-    : 0;
+  const duration = Math.floor((endedAt - new Date(record.startedAt)) / 1000);
 
   const updated = await callHistoryModel.CallHistory.findByIdAndUpdate(
     callId,
