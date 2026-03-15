@@ -8,7 +8,7 @@ const updateProfile = async (userId, { name, avatar }) => {
       name,
       avatar,
     },
-    { new: true },
+    { returnDocument: "after" },
   );
   if (!updatedUser) {
     throw new Error("Không tìm thấy người dùng!");

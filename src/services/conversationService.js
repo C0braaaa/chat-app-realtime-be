@@ -115,7 +115,7 @@ const updateConversationTheme = async (conversationId, themeKey) => {
   const conversation = await conversationModel.Conversation.findByIdAndUpdate(
     conversationId,
     { themeKey: themeKey },
-    { new: true },
+    { returnDocument: "after" },
   );
 
   if (!conversation)

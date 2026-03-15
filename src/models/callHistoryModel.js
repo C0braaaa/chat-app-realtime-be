@@ -23,9 +23,6 @@ const CallHistorySchema = new mongoose.Schema(
       enum: ["audio", "video"],
       required: true,
     },
-    // missed    = timeout 20s / không bắt máy
-    // rejected  = bấm từ chối
-    // completed = kết nối thành công, kết thúc bình thường
     status: {
       type: String,
       enum: ["missed", "rejected", "completed"],

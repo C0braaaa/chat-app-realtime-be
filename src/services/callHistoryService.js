@@ -19,7 +19,7 @@ const markCallAccepted = async (callId) => {
   const record = await callHistoryModel.CallHistory.findByIdAndUpdate(
     callId,
     { startedAt: new Date() },
-    { new: true },
+    { returnDocument: "after" },
   );
   return record;
 };
@@ -35,7 +35,7 @@ const markCallEnded = async (callId) => {
   const updated = await callHistoryModel.CallHistory.findByIdAndUpdate(
     callId,
     { status: "completed", endedAt, duration },
-    { new: true },
+    { returnDocument: "after" },
   );
   return updated;
 };
@@ -44,7 +44,7 @@ const markCallRejected = async (callId) => {
   const record = await callHistoryModel.CallHistory.findByIdAndUpdate(
     callId,
     { status: "rejected" },
-    { new: true },
+    { returnDocument: "after" },
   );
   return record;
 };
