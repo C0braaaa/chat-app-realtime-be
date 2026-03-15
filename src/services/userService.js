@@ -23,7 +23,8 @@ const getAllUsers = async (
   filterDirect = false,
   search = "",
 ) => {
-  let excludedIds = [currentUserId]; // Mặc định loại bỏ chính mình
+  const BOT_ID = "69a4e9eac9f54c6cf692d028";
+  let excludedIds = [currentUserId, BOT_ID]; // Mặc định loại bỏ chính mình và bot
 
   // Nếu cờ filterDirect = true (tức là đang ở chế độ tạo Direct Chat)
   if (filterDirect) {
