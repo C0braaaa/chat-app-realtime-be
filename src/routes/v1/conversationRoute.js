@@ -9,6 +9,10 @@ Router.get(
   "/detail/:conversationId",
   conversationController.getConversationDetail,
 );
+Router.get(
+  "/mentions/:conversationId",
+  conversationController.getMentionSuggestions,
+);
 Router.delete("/:conversationId", conversationController.deleteConversation);
 Router.delete("/group/:conversationId", conversationController.deleteGroup);
 Router.put("/theme/:conversationId", conversationController.updateTheme);

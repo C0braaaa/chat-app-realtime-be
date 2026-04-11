@@ -193,6 +193,20 @@ const updateTheme = async (req, res) => {
   }
 };
 
+const getMentionSuggestions = async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    const { userId } = req.query;
+    const suggestions = await conversationService.getMentionSuggestions(
+      conversationId,
+      userId,
+    );
+    res.status(200).json({ success: true, data: suggestions });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export const conversationController = {
   createConversation,
   getConversations,
@@ -200,4 +214,5 @@ export const conversationController = {
   deleteGroup,
   updateTheme,
   getConversationDetail,
+  getMentionSuggestions,
 };

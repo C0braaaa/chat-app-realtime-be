@@ -1,5 +1,7 @@
 import { conversationModel } from "#src/models/conversationModel.js";
 import { messageModel } from "#src/models/messageModel.js";
+import { userModel } from "#src/models/userModel.js";
+import { env } from "#src/config/environment.js";
 import mongoose from "mongoose";
 
 const createConversation = async (senderId, receiverId) => {
@@ -124,6 +126,35 @@ const updateConversationTheme = async (conversationId, themeKey) => {
   return conversation;
 };
 
+const getMentionSuggestions = async (conversationId, currentUserId) => {
+  // Lấy thông tin bot từ DB
+  const bot = await userModel.User.findById(env.BOT_USER_ID).select(
+    "name avatar",
+  );
+
+  const conversation = await conversationModel.Conversation.findById(
+    conversationId,
+  ).populate("participants", "name avatar");
+
+  if (!conversation) throw new Error("Không tìm thấy cuộc hội thoại");
+
+  // Với chat 1-1: chỉ hiện bot
+  if (conversation.type === "direct") {
+    return bot ? [{ _id: bot._id, name: bot.name, avatar: bot.avatar, isBot: true }] : [];
+  }
+
+  // Với chat nhóm: bot + tất cả participants trừ bản thân
+  const members = conversation.participants
+    .filter((p) => p._id.toString() !== currentUserId.toString())
+    .map((p) => ({ _id: p._id, name: p.name, avatar: p.avatar, isBot: false }));
+
+  const result = [];
+  if (bot) result.push({ _id: bot._id, name: bot.name, avatar: bot.avatar, isBot: true });
+  result.push(...members);
+
+  return result;
+};
+
 export const conversationService = {
   createConversation,
   createGroupConversation,
@@ -132,4 +163,5 @@ export const conversationService = {
   deleteConversationForUser,
   deleteGroupByOwner,
   updateConversationTheme,
+  getMentionSuggestions,
 };
