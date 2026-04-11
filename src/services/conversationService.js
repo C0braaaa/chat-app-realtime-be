@@ -140,7 +140,9 @@ const getMentionSuggestions = async (conversationId, currentUserId) => {
 
   // Với chat 1-1: chỉ hiện bot
   if (conversation.type === "direct") {
-    return bot ? [{ _id: bot._id, name: bot.name, avatar: bot.avatar, isBot: true }] : [];
+    return bot
+      ? [{ _id: bot._id, name: bot.name, avatar: bot.avatar, isBot: true }]
+      : [];
   }
 
   // Với chat nhóm: bot + tất cả participants trừ bản thân
@@ -149,7 +151,13 @@ const getMentionSuggestions = async (conversationId, currentUserId) => {
     .map((p) => ({ _id: p._id, name: p.name, avatar: p.avatar, isBot: false }));
 
   const result = [];
-  if (bot) result.push({ _id: bot._id, name: bot.name, avatar: bot.avatar, isBot: true });
+  if (bot)
+    result.push({
+      _id: bot._id,
+      name: bot.name,
+      avatar: bot.avatar,
+      isBot: true,
+    });
   result.push(...members);
 
   return result;
